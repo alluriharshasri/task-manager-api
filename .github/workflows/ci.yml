@@ -1,4 +1,4 @@
-name: CI on AWS EC2
+name: CI + CD on AWS EC2
 
 on:
   push:
@@ -6,20 +6,54 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
+  build-and-deploy:
     runs-on: self-hosted
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Node
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 18
 
-      - name: Install dependencies
+      - name: Install dependencies (CI)
         run: npm install
 
       - name: Run tests
         run: npm test -- --passWithNoTests
+
+      - name: Deploy to EC2
+        run: |
+          cd /home/ubuntu/task-manager-api
+          git pull origin main
+          npm install
+          ~/.npm-global/bin/pm2 restart task-api || ~/.npm-global/bin/pm2 start src/app.js --name task-api
+
+
+# name: CI on AWS EC2
+
+# on:
+#   push:
+#     branches: ["main"]
+#   workflow_dispatch:
+
+# jobs:
+#   build:
+#     runs-on: self-hosted
+
+#     steps:
+#       - name: Checkout code
+#         uses: actions/checkout@v4
+
+#       - name: Setup Node
+#         uses: actions/setup-node@v4
+#         with:
+#           node-version: 18
+
+#       - name: Install dependencies
+#         run: npm install
+
+#       - name: Run tests
+#         run: npm test -- --passWithNoTests
